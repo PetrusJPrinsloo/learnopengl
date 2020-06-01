@@ -46,6 +46,7 @@ func getShaderFileContents(filename string) string {
 
 // loop over cells and tell them to draw
 func draw(vao uint32, window *glfw.Window, program uint32) {
+	gl.ClearColor(0.2, 0.3, 0.3, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UseProgram(program)
 
