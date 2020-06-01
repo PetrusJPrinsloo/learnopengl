@@ -27,7 +27,7 @@ func main() {
 	defer glfw.Terminate()
 	program := graphics.InitOpenGL(vertexShaderSource, fragmentShaderSource)
 
-	vao := graphics.MakeVao(shape.Triangle)
+	vao := graphics.MakeVao(shape.Rectangle, shape.Indices)
 	for !window.ShouldClose() {
 		draw(vao, window, program)
 	}
@@ -51,7 +51,7 @@ func draw(vao uint32, window *glfw.Window, program uint32) {
 	gl.UseProgram(program)
 
 	gl.BindVertexArray(vao)
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(shape.Triangle)/3))
+	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 
 	glfw.PollEvents()
 	window.SwapBuffers()

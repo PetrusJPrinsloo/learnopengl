@@ -7,21 +7,38 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"log"
 	"strings"
+	"unsafe"
 )
 
-// makeVao initializes and returns a vertex array from the points provided.
-func MakeVao(points []float32) uint32 {
-	var vbo uint32
-	gl.GenBuffers(1, &vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, 4*len(points), gl.Ptr(points), gl.STATIC_DRAW)
+func MakeVao(vertices []float32, indices []uint32) uint32 {
+	var (
+		vbo uint32
+		vao uint32
+		ebo uint32
+	)
 
-	var vao uint32
 	gl.GenVertexArrays(1, &vao)
+	gl.GenBuffers(1, &vbo)
+	gl.GenBuffers(1, &ebo)
+
+	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
 	gl.BindVertexArray(vao)
-	gl.EnableVertexAttribArray(0)
+
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
+	gl.BufferData(gl.ARRAY_BUFFER, 4*len(vertices), gl.Ptr(vertices), gl.STATIC_DRAW)
+
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices), gl.Ptr(indices), gl.STATIC_DRAW)
+
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, int32(unsafe.Sizeof(float32(0))*3), nil)
+	gl.EnableVertexAttribArray(0)
+
+	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+	gl.BindVertexArray(0)
 
 	return vao
 }
