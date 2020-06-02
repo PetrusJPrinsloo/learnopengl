@@ -9,7 +9,6 @@ import (
 	_ "image/jpeg"
 	"log"
 	"neilpa.me/go-stbi"
-	_ "neilpa.me/go-stbi"
 	"os"
 	"strings"
 	"unsafe"
