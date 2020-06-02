@@ -18,8 +18,8 @@ var (
 
 func main() {
 	cnf = config.ReadFile("default.json")
-	vertexShaderSource := getShaderFileContents("resources\\shaders\\vertex\\shader.glsl")
-	fragmentShaderSource := getShaderFileContents("resources\\shaders\\fragment\\shader.glsl")
+	vertexShaderSource := getTextFileContents("resources\\shaders\\vertex\\shader.glsl")
+	fragmentShaderSource := getTextFileContents("resources\\shaders\\fragment\\shader.glsl")
 
 	runtime.LockOSThread()
 
@@ -28,12 +28,14 @@ func main() {
 	program := graphics.InitOpenGL(vertexShaderSource, fragmentShaderSource)
 
 	vao := graphics.MakeVao(shape.Rectangle, shape.Indices)
+	texture := graphics.MakeTexture("resources\\textures\\container.jpg")
 	for !window.ShouldClose() {
-		draw(vao, window, program)
+
+		draw(vao, texture, window, program)
 	}
 }
 
-func getShaderFileContents(filename string) string {
+func getTextFileContents(filename string) string {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -45,11 +47,12 @@ func getShaderFileContents(filename string) string {
 }
 
 // loop over cells and tell them to draw
-func draw(vao uint32, window *glfw.Window, program uint32) {
+func draw(vao uint32, texture *uint32, window *glfw.Window, program uint32) {
 	gl.ClearColor(0.2, 0.3, 0.3, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UseProgram(program)
 
+	gl.BindTexture(gl.TEXTURE_2D, *texture)
 	gl.BindVertexArray(vao)
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 
