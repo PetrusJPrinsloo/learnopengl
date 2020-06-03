@@ -5,7 +5,9 @@ import (
 	"github.com/PetrusJPrinsloo/learnopengl/config"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	_ "image/jpeg"
 	"log"
+	"neilpa.me/go-stbi"
 	"strings"
 	"unsafe"
 )
@@ -30,17 +32,47 @@ func MakeVao(vertices []float32, indices []uint32) uint32 {
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices), gl.Ptr(indices), gl.STATIC_DRAW)
 
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, int32(unsafe.Sizeof(float32(0))*3), nil)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, int32(unsafe.Sizeof(float32(0))*8), nil)
 	gl.EnableVertexAttribArray(0)
 
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, int32(unsafe.Sizeof(float32(0))*8), gl.PtrOffset(int(unsafe.Sizeof(float32(0))*3)))
+	gl.EnableVertexAttribArray(1)
+
+	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, int32(unsafe.Sizeof(float32(0))*8), gl.PtrOffset(int(unsafe.Sizeof(float32(0))*6)))
+	gl.EnableVertexAttribArray(2)
+
 	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	//gl.BindBuffer(gl.ARRAY_BUFFER, 2)
 
 	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
 	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-	gl.BindVertexArray(0)
+	//gl.BindVertexArray(0)
 
 	return vao
+}
+
+func MakeTexture(path string) *uint32 {
+	var texture uint32
+	gl.GenTextures(1, &texture)
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+
+	// set the texture wrapping parameters
+	gl.TextureParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+	gl.TextureParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+
+	// set texture filtering parameters
+	gl.TextureParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TextureParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+	data, err := stbi.Load(path)
+	if err != nil {
+		panic(err)
+	}
+
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, int32(data.Rect.Max.X), int32(data.Rect.Max.Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(data.Pix))
+	gl.GenerateMipmap(gl.TEXTURE_2D)
+
+	return &texture
 }
 
 // initGlfw initializes glfw and returns a Window to use.
@@ -102,10 +134,10 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 		var logLength int32
 		gl.GetShaderiv(shader, gl.INFO_LOG_LENGTH, &logLength)
 
-		log := strings.Repeat("\x00", int(logLength+1))
-		gl.GetShaderInfoLog(shader, logLength, nil, gl.Str(log))
+		logMsg := strings.Repeat("\x00", int(logLength+1))
+		gl.GetShaderInfoLog(shader, logLength, nil, gl.Str(logMsg))
 
-		return 0, fmt.Errorf("failed to compile %v: %v", source, log)
+		return 0, fmt.Errorf("failed to compile %v: %v", source, logMsg)
 	}
 
 	return shader, nil
