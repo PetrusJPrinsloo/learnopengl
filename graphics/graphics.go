@@ -5,14 +5,16 @@ import (
 	"github.com/PetrusJPrinsloo/learnopengl/config"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"image"
+	"image/draw"
 	_ "image/jpeg"
+	_ "image/png"
 	"log"
-	"neilpa.me/go-stbi"
+	"os"
 	"strings"
-	"unsafe"
 )
 
-func MakeVao(vertices []float32, indices []uint32) uint32 {
+func MakeVao(vertices []float32, program uint32) uint32 {
 	var (
 		vbo uint32
 		vao uint32
@@ -27,31 +29,26 @@ func MakeVao(vertices []float32, indices []uint32) uint32 {
 	gl.BindVertexArray(vao)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, 4*len(vertices), gl.Ptr(vertices), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices), gl.Ptr(indices), gl.STATIC_DRAW)
+	//gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	//gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices), gl.Ptr(indices), gl.STATIC_DRAW)
 
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, int32(unsafe.Sizeof(float32(0))*8), nil)
-	gl.EnableVertexAttribArray(0)
+	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
+	gl.EnableVertexAttribArray(vertAttrib)
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
 
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, int32(unsafe.Sizeof(float32(0))*8), gl.PtrOffset(int(unsafe.Sizeof(float32(0))*3)))
-	gl.EnableVertexAttribArray(1)
-
-	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, int32(unsafe.Sizeof(float32(0))*8), gl.PtrOffset(int(unsafe.Sizeof(float32(0))*6)))
-	gl.EnableVertexAttribArray(2)
-
-	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-	//gl.BindBuffer(gl.ARRAY_BUFFER, 2)
-
-	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-	//gl.BindVertexArray(0)
+	texCoordAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vertTexCoord\x00")))
+	gl.EnableVertexAttribArray(texCoordAttrib)
+	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
 
 	return vao
 }
 
 func MakeTexture(path string) *uint32 {
+
+	rgba := loadTextureImage(path)
+
 	var texture uint32
 	gl.GenTextures(1, &texture)
 	gl.BindTexture(gl.TEXTURE_2D, texture)
@@ -64,15 +61,37 @@ func MakeTexture(path string) *uint32 {
 	gl.TextureParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TextureParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
-	data, err := stbi.Load(path)
+	gl.TexImage2D(
+		gl.TEXTURE_2D,
+		0,
+		gl.RGBA,
+		int32(rgba.Rect.Size().X),
+		int32(rgba.Rect.Size().Y),
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		gl.Ptr(rgba.Pix))
+	gl.GenerateMipmap(gl.TEXTURE_2D)
+
+	return &texture
+}
+
+func loadTextureImage(path string) *image.RGBA {
+	imgFile, err := os.Open(path)
+	if err != nil {
+		panic(fmt.Errorf("texture %q not found on disk: %v", path, err))
+	}
+	img, _, err := image.Decode(imgFile)
 	if err != nil {
 		panic(err)
 	}
 
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, int32(data.Rect.Max.X), int32(data.Rect.Max.Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(data.Pix))
-	gl.GenerateMipmap(gl.TEXTURE_2D)
-
-	return &texture
+	rgba := image.NewRGBA(img.Bounds())
+	if rgba.Stride != rgba.Rect.Size().X*4 {
+		panic(fmt.Errorf("unsupported stride"))
+	}
+	draw.Draw(rgba, rgba.Bounds(), img, image.Point{X: 0, Y: 0}, draw.Src)
+	return rgba
 }
 
 // initGlfw initializes glfw and returns a Window to use.
@@ -95,7 +114,7 @@ func InitGlfw(cnf *config.Config) *glfw.Window {
 	return window
 }
 
-// initOpenGL initializes OpenGL and returns an intiialized program.
+// InitOpenGL initializes OpenGL and returns an initialized program.
 func InitOpenGL(vertexShaderSource string, fragmentShaderSource string) uint32 {
 	if err := gl.Init(); err != nil {
 		panic(err)
@@ -113,11 +132,11 @@ func InitOpenGL(vertexShaderSource string, fragmentShaderSource string) uint32 {
 		panic(err)
 	}
 
-	prog := gl.CreateProgram()
-	gl.AttachShader(prog, vertexShader)
-	gl.AttachShader(prog, fragmentShader)
-	gl.LinkProgram(prog)
-	return prog
+	program := gl.CreateProgram()
+	gl.AttachShader(program, vertexShader)
+	gl.AttachShader(program, fragmentShader)
+	gl.LinkProgram(program)
+	return program
 }
 
 func compileShader(source string, shaderType uint32) (uint32, error) {

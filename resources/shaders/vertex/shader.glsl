@@ -1,11 +1,16 @@
 #version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 2) in vec2 aTexCoord;
 
-out vec2 TexCoord;
+uniform mat4 projection;
+uniform mat4 camera;
+uniform mat4 model;
+
+in vec3 vert;
+in vec2 vertTexCoord;
+
+out vec2 fragTexCoord;
 
 void main()
 {
-    gl_Position = vec4(aPos, 1.0);
-    TexCoord = aTexCoord;
+    fragTexCoord = vertTexCoord;
+    gl_Position = projection * camera * model * vec4(vert, 1);
 }
