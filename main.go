@@ -96,7 +96,7 @@ func draw(vao uint32, window *glfw.Window, program uint32, texture *uint32, mode
 	for i, cube := range cubePositions {
 		model = mgl.Ident4()
 		model = model.Mul4(mgl.Translate3D(cube.X(), cube.Y(), cube.Z()))
-		model.Mul4(mgl.HomogRotate3D(20.0*float32(i), mgl.Vec3{1, 0.3, 0.5}))
+		model = model.Mul4(mgl.HomogRotate3D(mgl.RadToDeg(20.0*float32(i)), mgl.Vec3{1, 0.3, 0.5}))
 		gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
 		gl.DrawArrays(gl.TRIANGLES, 0, 36)
 	}
