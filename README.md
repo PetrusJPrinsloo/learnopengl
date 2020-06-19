@@ -1,5 +1,7 @@
 # Learn OpenGL
 
+![Build](https://github.com/PetrusJPrinsloo/learnopengl/workflows/Go/badge.svg)
+
 I'm busy following the tutorial on https://learnopengl.com. Only difference is I'm going to be using Go instead of C++. I'm also not doing the same structure, divided things up a bit more, but not too much and it should be easy to find the same/similar code.
 
 ## Install
