@@ -26,6 +26,7 @@ jobs:
       run: |
         sudo apt-get install libgl1-mesa-dev
         sudo apt-get install libxcursor-dev
+        sudo apt-get install libxrandr-dev
         go get -v -t -d ./...
 
     - name: Build
