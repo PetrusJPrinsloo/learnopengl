@@ -7,7 +7,6 @@ import (
 	mgl "github.com/go-gl/mathgl/mgl32"
 	"io/ioutil"
 	"log"
-	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -15,19 +14,6 @@ import (
 )
 
 var cnf *config.Config
-
-// end temp variables
-var cameraPos = mgl.Vec3{0, 0.0, 3}
-var cameraFront = mgl.Vec3{0.0, 0.0, -1.0}
-var cameraUp = mgl.Vec3{0, 1, 0}
-
-var yaw = -90.0
-var pitch = 0.0
-var lastX = 0.0
-var lastY = 0.0
-var fov = 45.0
-
-var firstMouse = true
 
 var cubePositions = []mgl.Vec3{
 	{0.0, 0.0, 0.0},
@@ -42,6 +28,8 @@ var cubePositions = []mgl.Vec3{
 	{-1.3, 1.0, -1.5},
 }
 
+var camera = graphics.GetCamera()
+
 var deltaTime = 0.0
 var lastFrame = 0.0
 
@@ -50,8 +38,8 @@ func main() {
 	vertexShaderSource := getTextFileContents("resources\\shaders\\vertex\\shader.glsl")
 	fragmentShaderSource := getTextFileContents("resources\\shaders\\fragment\\shader.glsl")
 
-	lastX = float64(cnf.Width) / 2.0
-	lastY = float64(cnf.Height) / 2.0
+	camera.LastX = float64(cnf.Width) / 2.0
+	camera.LastY = float64(cnf.Height) / 2.0
 
 	runtime.LockOSThread()
 
@@ -73,60 +61,14 @@ func main() {
 	gl.ClearColor(0.126, 0.145, 0.2, 1.0)
 
 	window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
-	window.SetCursorPosCallback(mouseCallback)
-	window.SetScrollCallback(scrollCallback)
+	window.SetCursorPosCallback(camera.MouseCallback)
+	window.SetScrollCallback(camera.ScrollCallback)
 
 	for !window.ShouldClose() {
 		draw(vao, window, program, texture)
 	}
 
 	window.Destroy()
-}
-
-func mouseCallback(w *glfw.Window, xpos float64, ypos float64) {
-	if firstMouse {
-		lastX = xpos
-		lastY = ypos
-		firstMouse = false
-	}
-
-	xoffset := xpos - lastX
-	yoffset := lastY - ypos
-	lastX = xpos
-	lastY = ypos
-
-	sensitivity := 0.2
-	xoffset *= sensitivity
-	yoffset *= sensitivity
-
-	yaw += xoffset
-	pitch += yoffset
-
-	if pitch > 89.0 {
-		pitch = 89.0
-	}
-	if pitch < -89.0 {
-		pitch = -89.0
-	}
-
-	front := mgl.Vec3{
-		float32(math.Cos(float64(mgl.DegToRad(float32(yaw)))) * math.Cos(float64(mgl.DegToRad(float32(pitch))))),
-		float32(math.Sin(float64(mgl.DegToRad(float32(pitch))))),
-		float32(math.Sin(float64(mgl.DegToRad(float32(yaw)))) * math.Cos(float64(mgl.DegToRad(float32(pitch))))),
-	}
-
-	cameraFront = front.Normalize()
-}
-
-func scrollCallback(w *glfw.Window, xoff float64, yoff float64) {
-	log.Println("scrolling")
-	fov -= yoff
-	if fov < 1.0 {
-		fov = 1.0
-	}
-	if fov > 45.0 {
-		fov = 45.0
-	}
 }
 
 // loop over cells and tell them to draw
@@ -149,13 +91,13 @@ func draw(vao uint32, window *glfw.Window, program uint32, texture *uint32) {
 	gl.UseProgram(program)
 
 	//Transformation Matrices
-	projection := mgl.Perspective(mgl.DegToRad(float32(fov)), float32(cnf.Width)/float32(cnf.Height), 0.1, 100.0)
+	projection := mgl.Perspective(mgl.DegToRad(float32(camera.Fov)), float32(cnf.Width)/float32(cnf.Height), 0.1, 100.0)
 	projectionUniform := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 	gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
 
 	// camera/view transformation
 	view := mgl.Ident4()
-	view = view.Mul4(mgl.LookAtV(cameraPos, cameraPos.Add(cameraFront), cameraUp))
+	view = view.Mul4(mgl.LookAtV(camera.CameraPos, camera.CameraPos.Add(camera.CameraFront), camera.CameraUp))
 	viewUniform := gl.GetUniformLocation(program, gl.Str("view\x00"))
 	gl.UniformMatrix4fv(viewUniform, 1, false, &view[0])
 
@@ -199,24 +141,24 @@ func processInput(window *glfw.Window) {
 	// Forward
 	if window.GetKey(glfw.KeyW) == glfw.Press {
 		log.Println("W key pressed")
-		cameraPos = cameraPos.Add(cameraFront.Mul(cameraSpeed))
+		camera.CameraPos = camera.CameraPos.Add(camera.CameraFront.Mul(cameraSpeed))
 	}
 
 	// Backward
 	if window.GetKey(glfw.KeyS) == glfw.Press {
 		log.Println("S key pressed")
-		cameraPos = cameraPos.Sub(cameraFront.Mul(cameraSpeed))
+		camera.CameraPos = camera.CameraPos.Sub(camera.CameraFront.Mul(cameraSpeed))
 	}
 
 	// Left
 	if window.GetKey(glfw.KeyA) == glfw.Press {
 		log.Println("A key pressed")
-		cameraPos = cameraPos.Sub(cameraFront.Cross(cameraUp).Normalize().Mul(cameraSpeed))
+		camera.CameraPos = camera.CameraPos.Sub(camera.CameraFront.Cross(camera.CameraUp).Normalize().Mul(cameraSpeed))
 	}
 
 	// Right
 	if window.GetKey(glfw.KeyD) == glfw.Press {
 		log.Println("D key pressed")
-		cameraPos = cameraPos.Add(cameraFront.Cross(cameraUp).Normalize().Mul(cameraSpeed))
+		camera.CameraPos = camera.CameraPos.Add(camera.CameraFront.Cross(camera.CameraUp).Normalize().Mul(cameraSpeed))
 	}
 }
