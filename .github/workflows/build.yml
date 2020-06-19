@@ -1,4 +1,4 @@
-name: Go
+name: Build
 
 on:
   push:
@@ -24,14 +24,11 @@ jobs:
 
     - name: Get dependencies
       run: |
+        sudo apt-get install libgl1-mesa-dev libx11-dev libxinerama-dev libxcursor-dev libxrandr-dev xorg-dev
         go get -v -t -d ./...
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
 
     - name: Build
       run: go build -v .
 
-    - name: Test
-      run: go test -v .
+#    - name: Test
+#      run: go test -v .
