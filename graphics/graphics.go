@@ -14,16 +14,14 @@ import (
 	"strings"
 )
 
-func MakeVao(vertices []float32, program uint32) uint32 {
+func MakeVao(vertices []float32, program uint32) (uint32, uint32) {
 	var (
 		vbo uint32
 		vao uint32
-		ebo uint32
 	)
 
 	gl.GenVertexArrays(1, &vao)
 	gl.GenBuffers(1, &vbo)
-	gl.GenBuffers(1, &ebo)
 
 	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
 	gl.BindVertexArray(vao)
@@ -31,16 +29,29 @@ func MakeVao(vertices []float32, program uint32) uint32 {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
-	//gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
-	//gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 4*len(indices), gl.Ptr(indices), gl.STATIC_DRAW)
-
-	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
+	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
 	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
 
 	texCoordAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vertTexCoord\x00")))
 	gl.EnableVertexAttribArray(texCoordAttrib)
 	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+
+	return vao, vbo
+}
+
+func MakeLightVao(vertices []float32, program uint32, vbo uint32) uint32 {
+	var vao uint32
+
+	gl.GenVertexArrays(1, &vao)
+	gl.BindVertexArray(vao)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+
+	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aPos\x00")))
+	gl.EnableVertexAttribArray(vertAttrib)
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
 
 	return vao
 }

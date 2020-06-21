@@ -15,18 +15,9 @@ import (
 
 var cnf *config.Config
 
-var cubePositions = []mgl.Vec3{
-	{0.0, 0.0, 0.0},
-	{2.0, 5.0, -15.0},
-	{-1.5, -2.2, -2.5},
-	{-3.8, -2.0, -12.3},
-	{2.4, -0.4, -3.5},
-	{-1.7, 3.0, -7.5},
-	{1.3, -2.0, -2.5},
-	{1.5, 2.0, -2.5},
-	{1.5, 0.2, -1.5},
-	{-1.3, 1.0, -1.5},
-}
+var lightPosition = mgl.Vec3{1.2, 1.0, 2.0}
+
+var cubePosition = mgl.Vec3{0.0, 0.0, 0.0}
 
 var camera = graphics.GetCamera()
 
@@ -53,7 +44,8 @@ func main() {
 
 	gl.BindFragDataLocation(program, 0, gl.Str("outputColor\x00"))
 
-	vao := graphics.MakeVao(shape.Cube, program)
+	vao, vbo := graphics.MakeVao(shape.Cube, program)
+	lightVao := graphics.MakeLightVao(shape.Cube, program, vbo)
 
 	// Configure global settings
 	gl.Enable(gl.DEPTH_TEST)
@@ -65,14 +57,14 @@ func main() {
 	window.SetScrollCallback(camera.ScrollCallback)
 
 	for !window.ShouldClose() {
-		draw(vao, window, program, texture)
+		draw(vao, lightVao, window, program, texture)
 	}
 
 	window.Destroy()
 }
 
-// loop over cells and tell them to draw
-func draw(vao uint32, window *glfw.Window, program uint32, texture *uint32) {
+// draw function called from application loop
+func draw(vao uint32, lightVao uint32, window *glfw.Window, program uint32, texture *uint32) {
 	// per-frame time logic
 	// --------------------
 	currentFrame := glfw.GetTime()
@@ -104,16 +96,12 @@ func draw(vao uint32, window *glfw.Window, program uint32, texture *uint32) {
 	gl.BindVertexArray(vao)
 
 	// Render a bunch of cubes
-	for _, cube := range cubePositions {
-		model := mgl.Ident4()
-		model = model.Mul4(mgl.Translate3D(cube.X(), cube.Y(), cube.Z()))
-		//angle := mgl.DegToRad(20.0 * float32(i))
-		//model = model.Mul4(mgl.HomogRotate3D(angle, mgl.Vec3{1, 0.3, 0.5}))
-		modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
-		gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+	model := mgl.Ident4()
+	model = model.Mul4(mgl.Translate3D(cubePosition.X(), cubePosition.Y(), cubePosition.Z()))
+	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
+	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
 
-		gl.DrawArrays(gl.TRIANGLES, 0, 36)
-	}
+	gl.DrawArrays(gl.TRIANGLES, 0, 36)
 
 	// Maintenance
 	window.SwapBuffers()
