@@ -26,8 +26,10 @@ var lastFrame = 0.0
 
 func main() {
 	cnf = config.ReadFile("default.json")
-	vertexShaderSource := getTextFileContents("resources\\shaders\\vertex\\shader.glsl")
-	fragmentShaderSource := getTextFileContents("resources\\shaders\\fragment\\shader.glsl")
+	vertexShaderSource := getTextFileContents("resources\\shaders\\vertex\\colors.glsl")
+	fragmentShaderSource := getTextFileContents("resources\\shaders\\fragment\\colors.glsl")
+	vertexShaderSource_light := getTextFileContents("resources\\shaders\\vertex\\light_cube.glsl")
+	fragmentShaderSource_light := getTextFileContents("resources\\shaders\\fragment\\light_cube.glsl")
 
 	camera.LastX = float64(cnf.Width) / 2.0
 	camera.LastY = float64(cnf.Height) / 2.0
@@ -38,6 +40,7 @@ func main() {
 	graphics.InitOpenGL()
 	defer glfw.Terminate()
 	objectShader := graphics.ShaderFactory(vertexShaderSource, fragmentShaderSource)
+	lightShader := graphics.ShaderFactory(vertexShaderSource_light, fragmentShaderSource_light)
 	objectShader.Use()
 
 	texture := graphics.MakeTexture("resources\\textures\\container.png")
@@ -45,7 +48,7 @@ func main() {
 	gl.BindFragDataLocation(objectShader.Id, 0, gl.Str("outputColor\x00"))
 
 	vao, vbo := graphics.MakeObjectVao(shape.Cube, objectShader.Id)
-	lightVao := graphics.MakeLightVao(shape.Cube, objectShader.Id, vbo)
+	lightVao := graphics.MakeLightVao(shape.Cube, lightShader.Id, vbo)
 
 	// Configure global settings
 	gl.Enable(gl.DEPTH_TEST)
@@ -57,14 +60,14 @@ func main() {
 	window.SetScrollCallback(camera.ScrollCallback)
 
 	for !window.ShouldClose() {
-		draw(vao, lightVao, window, &objectShader, texture)
+		draw(vao, lightVao, window, &objectShader, &lightShader, texture)
 	}
 
 	window.Destroy()
 }
 
 // draw function called from application loop
-func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, texture *uint32) {
+func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader, texture *uint32) {
 	// per-frame time logic
 	// --------------------
 	currentFrame := glfw.GetTime()
@@ -81,6 +84,8 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	gl.BindTexture(gl.TEXTURE_2D, *texture)
 
 	objectShader.Use()
+	objectShader.SetVec3("objectColor", mgl.Vec3{1.0, 0.5, 0.31})
+	objectShader.SetVec3("lightColor", mgl.Vec3{1.0, 1.0, 1.0})
 
 	//Transformation Matrices
 	projection := mgl.Perspective(mgl.DegToRad(float32(camera.Fov)), float32(cnf.Width)/float32(cnf.Height), 0.1, 100.0)
@@ -98,6 +103,18 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	model = model.Mul4(mgl.Translate3D(cubePosition.X(), cubePosition.Y(), cubePosition.Z()))
 	objectShader.SetMat4("model", model)
 
+	gl.DrawArrays(gl.TRIANGLES, 0, 36)
+
+	// also draw the lamp object
+	lightCubeShader.Use()
+	lightCubeShader.SetMat4("projection", projection)
+	lightCubeShader.SetMat4("view", view)
+	model = mgl.Ident4()
+	model = model.Mul4(mgl.Translate3D(lightPosition.X(), lightPosition.Y(), lightPosition.Z()))
+	model = model.Mul4(mgl.Scale3D(0.3, 0.3, 0.3)) // a smaller cube
+	lightCubeShader.SetMat4("model", model)
+
+	gl.BindVertexArray(lightVao)
 	gl.DrawArrays(gl.TRIANGLES, 0, 36)
 
 	// Maintenance
