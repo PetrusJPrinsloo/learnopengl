@@ -36,16 +36,15 @@ func main() {
 
 	window := graphics.InitGlfw(cnf)
 	defer glfw.Terminate()
-	program := graphics.InitOpenGL(vertexShaderSource, fragmentShaderSource)
-	gl.UseProgram(program)
+	objectShader := graphics.ShaderFactory(vertexShaderSource, fragmentShaderSource)
+	objectShader.Use()
 
 	texture := graphics.MakeTexture("resources\\textures\\container.png")
-	gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("texture\x00")), 0)
+	objectShader.SetInt("texture", 0)
+	gl.BindFragDataLocation(objectShader.Id, 0, gl.Str("outputColor\x00"))
 
-	gl.BindFragDataLocation(program, 0, gl.Str("outputColor\x00"))
-
-	vao, vbo := graphics.MakeVao(shape.Cube, program)
-	lightVao := graphics.MakeLightVao(shape.Cube, program, vbo)
+	vao, vbo := graphics.MakeObjectVao(shape.Cube, objectShader.Id)
+	lightVao := graphics.MakeLightVao(shape.Cube, objectShader.Id, vbo)
 
 	// Configure global settings
 	gl.Enable(gl.DEPTH_TEST)
@@ -57,14 +56,14 @@ func main() {
 	window.SetScrollCallback(camera.ScrollCallback)
 
 	for !window.ShouldClose() {
-		draw(vao, lightVao, window, program, texture)
+		draw(vao, lightVao, window, objectShader, texture)
 	}
 
 	window.Destroy()
 }
 
 // draw function called from application loop
-func draw(vao uint32, lightVao uint32, window *glfw.Window, program uint32, texture *uint32) {
+func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightShader *graphics.Shader, texture *uint32) {
 	// per-frame time logic
 	// --------------------
 	currentFrame := glfw.GetTime()
@@ -80,26 +79,23 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, program uint32, text
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, *texture)
 
-	gl.UseProgram(program)
+	objectShader.Use()
 
 	//Transformation Matrices
 	projection := mgl.Perspective(mgl.DegToRad(float32(camera.Fov)), float32(cnf.Width)/float32(cnf.Height), 0.1, 100.0)
-	projectionUniform := gl.GetUniformLocation(program, gl.Str("projection\x00"))
-	gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
+	objectShader.SetMat4("projection", projection)
 
 	// camera/view transformation
 	view := mgl.Ident4()
 	view = view.Mul4(mgl.LookAtV(camera.CameraPos, camera.CameraPos.Add(camera.CameraFront), camera.CameraUp))
-	viewUniform := gl.GetUniformLocation(program, gl.Str("view\x00"))
-	gl.UniformMatrix4fv(viewUniform, 1, false, &view[0])
+	objectShader.SetMat4("view", view)
 
 	gl.BindVertexArray(vao)
 
 	// Render a bunch of cubes
 	model := mgl.Ident4()
 	model = model.Mul4(mgl.Translate3D(cubePosition.X(), cubePosition.Y(), cubePosition.Z()))
-	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
-	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+	objectShader.SetMat4("model", model)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, 36)
 

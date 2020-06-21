@@ -11,10 +11,9 @@ import (
 	_ "image/png"
 	"log"
 	"os"
-	"strings"
 )
 
-func MakeVao(vertices []float32, program uint32) (uint32, uint32) {
+func MakeObjectVao(vertices []float32, program uint32) (uint32, uint32) {
 	var (
 		vbo uint32
 		vao uint32
@@ -126,49 +125,10 @@ func InitGlfw(cnf *config.Config) *glfw.Window {
 }
 
 // InitOpenGL initializes OpenGL and returns an initialized program.
-func InitOpenGL(vertexShaderSource string, fragmentShaderSource string) uint32 {
+func InitOpenGL() {
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}
 	version := gl.GoStr(gl.GetString(gl.VERSION))
 	log.Println("OpenGL version", version)
-
-	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
-	if err != nil {
-		panic(err)
-	}
-
-	fragmentShader, err := compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
-	if err != nil {
-		panic(err)
-	}
-
-	program := gl.CreateProgram()
-	gl.AttachShader(program, vertexShader)
-	gl.AttachShader(program, fragmentShader)
-	gl.LinkProgram(program)
-	return program
-}
-
-func compileShader(source string, shaderType uint32) (uint32, error) {
-	shader := gl.CreateShader(shaderType)
-
-	csources, free := gl.Strs(source + "\x00")
-	gl.ShaderSource(shader, 1, csources, nil)
-	free()
-	gl.CompileShader(shader)
-
-	var status int32
-	gl.GetShaderiv(shader, gl.COMPILE_STATUS, &status)
-	if status == gl.FALSE {
-		var logLength int32
-		gl.GetShaderiv(shader, gl.INFO_LOG_LENGTH, &logLength)
-
-		logMsg := strings.Repeat("\x00", int(logLength+1))
-		gl.GetShaderInfoLog(shader, logLength, nil, gl.Str(logMsg))
-
-		return 0, fmt.Errorf("failed to compile %v: %v", source, logMsg)
-	}
-
-	return shader, nil
 }
