@@ -28,8 +28,8 @@ func main() {
 	cnf = config.ReadFile("default.json")
 	vertexShaderSource := getTextFileContents("resources\\shaders\\vertex\\colors.glsl")
 	fragmentShaderSource := getTextFileContents("resources\\shaders\\fragment\\colors.glsl")
-	vertexShaderSource_light := getTextFileContents("resources\\shaders\\vertex\\light_cube.glsl")
-	fragmentShaderSource_light := getTextFileContents("resources\\shaders\\fragment\\light_cube.glsl")
+	vertexShaderSourceLight := getTextFileContents("resources\\shaders\\vertex\\light_cube.glsl")
+	fragmentShaderSourceLight := getTextFileContents("resources\\shaders\\fragment\\light_cube.glsl")
 
 	camera.LastX = float64(cnf.Width) / 2.0
 	camera.LastY = float64(cnf.Height) / 2.0
@@ -40,7 +40,7 @@ func main() {
 	graphics.InitOpenGL()
 	defer glfw.Terminate()
 	objectShader := graphics.ShaderFactory(vertexShaderSource, fragmentShaderSource)
-	lightShader := graphics.ShaderFactory(vertexShaderSource_light, fragmentShaderSource_light)
+	lightShader := graphics.ShaderFactory(vertexShaderSourceLight, fragmentShaderSourceLight)
 	objectShader.Use()
 
 	texture := graphics.MakeTexture("resources\\textures\\container.png")
