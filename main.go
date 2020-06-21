@@ -35,6 +35,7 @@ func main() {
 	runtime.LockOSThread()
 
 	window := graphics.InitGlfw(cnf)
+	graphics.InitOpenGL()
 	defer glfw.Terminate()
 	objectShader := graphics.ShaderFactory(vertexShaderSource, fragmentShaderSource)
 	objectShader.Use()
@@ -56,14 +57,14 @@ func main() {
 	window.SetScrollCallback(camera.ScrollCallback)
 
 	for !window.ShouldClose() {
-		draw(vao, lightVao, window, objectShader, texture)
+		draw(vao, lightVao, window, &objectShader, texture)
 	}
 
 	window.Destroy()
 }
 
 // draw function called from application loop
-func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightShader *graphics.Shader, texture *uint32) {
+func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, texture *uint32) {
 	// per-frame time logic
 	// --------------------
 	currentFrame := glfw.GetTime()

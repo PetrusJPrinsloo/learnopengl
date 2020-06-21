@@ -11,7 +11,7 @@ type Shader struct {
 	Id uint32
 }
 
-func ShaderFactory(vertexShaderSource string, fragmentShaderSource string) *Shader {
+func ShaderFactory(vertexShaderSource string, fragmentShaderSource string) Shader {
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
 		panic(err)
@@ -28,14 +28,14 @@ func ShaderFactory(vertexShaderSource string, fragmentShaderSource string) *Shad
 	gl.LinkProgram(program)
 
 	shader := Shader{Id: program}
-	return &shader
+	return shader
 }
 
 func compileShader(source string, shaderType uint32) (uint32, error) {
 	shader := gl.CreateShader(shaderType)
 
-	csources, free := gl.Strs(source + "\x00")
-	gl.ShaderSource(shader, 1, csources, nil)
+	sourcePointer, free := gl.Strs(source + "\x00")
+	gl.ShaderSource(shader, 1, sourcePointer, nil)
 	free()
 	gl.CompileShader(shader)
 
@@ -71,33 +71,33 @@ func (s *Shader) setBool(name string, value bool) {
 
 // Wrapping the ugly gl function calls
 func (s *Shader) SetInt(name string, value int32) {
-	gl.Uniform1i(gl.GetUniformLocation(s.Id, gl.Str(name)), value)
+	gl.Uniform1i(gl.GetUniformLocation(s.Id, gl.Str(name+"\x00")), value)
 }
 
 func (s *Shader) SetFloat(name string, value float32) {
-	gl.Uniform1f(gl.GetUniformLocation(s.Id, gl.Str(name)), value)
+	gl.Uniform1f(gl.GetUniformLocation(s.Id, gl.Str(name+"\x00")), value)
 }
 
 func (s *Shader) SetVec2(name string, value mgl.Vec2) {
-	gl.Uniform3fv(gl.GetUniformLocation(s.Id, gl.Str(name)), 1, &value[0])
+	gl.Uniform3fv(gl.GetUniformLocation(s.Id, gl.Str(name+"\x00")), 1, &value[0])
 }
 
 func (s *Shader) SetVec3(name string, value mgl.Vec3) {
-	gl.Uniform3fv(gl.GetUniformLocation(s.Id, gl.Str(name)), 1, &value[0])
+	gl.Uniform3fv(gl.GetUniformLocation(s.Id, gl.Str(name+"\x00")), 1, &value[0])
 }
 
 func (s *Shader) SetVec4(name string, value mgl.Vec4) {
-	gl.Uniform3fv(gl.GetUniformLocation(s.Id, gl.Str(name)), 1, &value[0])
+	gl.Uniform3fv(gl.GetUniformLocation(s.Id, gl.Str(name+"\x00")), 1, &value[0])
 }
 
 func (s *Shader) SetMat2(name string, value mgl.Mat2) {
-	gl.UniformMatrix2fv(gl.GetUniformLocation(s.Id, gl.Str(name)), 1, false, &value[0])
+	gl.UniformMatrix2fv(gl.GetUniformLocation(s.Id, gl.Str(name+"\x00")), 1, false, &value[0])
 }
 
 func (s *Shader) SetMat3(name string, value mgl.Mat3) {
-	gl.UniformMatrix3fv(gl.GetUniformLocation(s.Id, gl.Str(name)), 1, false, &value[0])
+	gl.UniformMatrix3fv(gl.GetUniformLocation(s.Id, gl.Str(name+"\x00")), 1, false, &value[0])
 }
 
 func (s *Shader) SetMat4(name string, value mgl.Mat4) {
-	gl.UniformMatrix4fv(gl.GetUniformLocation(s.Id, gl.Str(name)), 1, false, &value[0])
+	gl.UniformMatrix4fv(gl.GetUniformLocation(s.Id, gl.Str(name+"\x00")), 1, false, &value[0])
 }
