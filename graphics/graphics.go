@@ -30,11 +30,15 @@ func MakeObjectVao(vertices []float32, program uint32) (uint32, uint32) {
 
 	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(0))
 
-	texCoordAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vertTexCoord\x00")))
-	gl.EnableVertexAttribArray(texCoordAttrib)
-	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+	//texCoordAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vertTexCoord\x00")))
+	//gl.EnableVertexAttribArray(texCoordAttrib)
+	//gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+
+	normal := uint32(gl.GetAttribLocation(program, gl.Str("aNormal\x00")))
+	gl.EnableVertexAttribArray(normal)
+	gl.VertexAttribPointer(normal, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(3*4))
 
 	return vao, vbo
 }
@@ -50,7 +54,7 @@ func MakeLightVao(vertices []float32, program uint32, vbo uint32) uint32 {
 
 	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(0))
 
 	return vao
 }

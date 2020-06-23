@@ -23,8 +23,8 @@ type Camera struct {
 
 func GetCamera() Camera {
 	c := Camera{}
-	c.CameraPos = mgl.Vec3{0, 0.0, 3}
-	c.CameraFront = mgl.Vec3{0.0, 0.0, -1.0}
+	c.CameraPos = mgl.Vec3{3.5, 1.5, 2.2}
+	c.CameraFront = mgl.Vec3{-0.85, -0.36, -0.36}
 	c.CameraUp = mgl.Vec3{0, 1, 0}
 
 	c.Yaw = -90.0
