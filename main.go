@@ -43,10 +43,6 @@ func main() {
 	lightShader := graphics.ShaderFactory(vertexShaderSourceLight, fragmentShaderSourceLight)
 	objectShader.Use()
 
-	texture := graphics.MakeTexture("resources\\textures\\container.png")
-	objectShader.SetInt("texture", 0)
-	gl.BindFragDataLocation(objectShader.Id, 0, gl.Str("outputColor\x00"))
-
 	vao, vbo := graphics.MakeObjectVao(shape.Cube, objectShader.Id)
 	lightVao := graphics.MakeLightVao(shape.Cube, lightShader.Id, vbo)
 
@@ -60,14 +56,14 @@ func main() {
 	window.SetScrollCallback(camera.ScrollCallback)
 
 	for !window.ShouldClose() {
-		draw(vao, lightVao, window, &objectShader, &lightShader, texture)
+		draw(vao, lightVao, window, &objectShader, &lightShader)
 	}
 
 	window.Destroy()
 }
 
 // draw function called from application loop
-func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader, texture *uint32) {
+func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader) {
 	// per-frame time logic
 	// --------------------
 	currentFrame := glfw.GetTime()
@@ -80,12 +76,10 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, *texture)
-
 	objectShader.Use()
 	objectShader.SetVec3("objectColor", mgl.Vec3{1.0, 0.5, 0.31})
 	objectShader.SetVec3("lightColor", mgl.Vec3{1.0, 1.0, 1.0})
+	lightCubeShader.SetVec3("lightPos", lightPosition)
 
 	//Transformation Matrices
 	projection := mgl.Perspective(mgl.DegToRad(float32(camera.Fov)), float32(cnf.Width)/float32(cnf.Height), 0.1, 100.0)
@@ -95,10 +89,11 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	view := mgl.Ident4()
 	view = view.Mul4(mgl.LookAtV(camera.CameraPos, camera.CameraPos.Add(camera.CameraFront), camera.CameraUp))
 	objectShader.SetMat4("view", view)
+	objectShader.SetVec3("lightPos", lightPosition)
+	objectShader.SetVec3("viewPos", camera.CameraPos)
 
 	gl.BindVertexArray(vao)
 
-	// Render a bunch of cubes
 	model := mgl.Ident4()
 	model = model.Mul4(mgl.Translate3D(cubePosition.X(), cubePosition.Y(), cubePosition.Z()))
 	objectShader.SetMat4("model", model)
@@ -137,6 +132,13 @@ func processInput(window *glfw.Window) {
 	if window.GetKey(glfw.KeyEscape) == glfw.Press {
 		log.Println("Escape key pressed")
 		window.SetShouldClose(true)
+	}
+
+	if window.GetKey(glfw.KeyI) == glfw.Press {
+		log.Println("Information dump")
+		log.Println("Camera Position: ", camera.CameraPos)
+		log.Println("Camera Front: ", camera.CameraFront)
+		log.Println("Camera Up: ", camera.CameraUp)
 	}
 
 	cameraSpeed := float32(2.5 * deltaTime)
