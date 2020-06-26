@@ -7,6 +7,7 @@ import (
 	mgl "github.com/go-gl/mathgl/mgl32"
 	"io/ioutil"
 	"log"
+	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -79,7 +80,7 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	objectShader.Use()
 	objectShader.SetVec3("objectColor", mgl.Vec3{1.0, 0.5, 0.31})
 	objectShader.SetVec3("lightColor", mgl.Vec3{1.0, 1.0, 1.0})
-	lightCubeShader.SetVec3("lightPos", lightPosition)
+	objectShader.SetVec3("light.position", lightPosition)
 
 	//Transformation Matrices
 	projection := mgl.Perspective(mgl.DegToRad(float32(camera.Fov)), float32(cnf.Width)/float32(cnf.Height), 0.1, 100.0)
@@ -91,6 +92,25 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	objectShader.SetMat4("view", view)
 	objectShader.SetVec3("lightPos", lightPosition)
 	objectShader.SetVec3("viewPos", camera.CameraPos)
+
+	// light properties
+	lightColor := mgl.Vec3{
+		float32(math.Sin(glfw.GetTime() * 2.0)),
+		float32(math.Sin(glfw.GetTime() * 0.7)),
+		float32(math.Sin(glfw.GetTime() * 1.3)),
+	}
+
+	diffuseColor := lightColor.Mul(0.5)   // decrease the influence
+	ambientColor := diffuseColor.Mul(0.2) // low influence
+	objectShader.SetVec3("light.ambient", ambientColor)
+	objectShader.SetVec3("light.diffuse", diffuseColor)
+	objectShader.SetVec3("light.specular", mgl.Vec3{1.0, 1.0, 1.0})
+
+	// material properties
+	objectShader.SetVec3("material.ambient", mgl.Vec3{1.0, 0.5, 0.31})
+	objectShader.SetVec3("material.diffuse", mgl.Vec3{1.0, 0.5, 0.31})
+	objectShader.SetVec3("material.specular", mgl.Vec3{0.5, 0.5, 0.5})
+	objectShader.SetFloat("material.shininess", 32.0)
 
 	gl.BindVertexArray(vao)
 
@@ -104,6 +124,7 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	lightCubeShader.Use()
 	lightCubeShader.SetMat4("projection", projection)
 	lightCubeShader.SetMat4("view", view)
+	lightCubeShader.SetVec3("color", lightColor)
 	model = mgl.Ident4()
 	model = model.Mul4(mgl.Translate3D(lightPosition.X(), lightPosition.Y(), lightPosition.Z()))
 	model = model.Mul4(mgl.Scale3D(0.3, 0.3, 0.3)) // a smaller cube
