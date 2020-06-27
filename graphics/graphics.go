@@ -30,15 +30,15 @@ func MakeObjectVao(vertices []float32, program uint32) (uint32, uint32) {
 
 	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(0))
-
-	//texCoordAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vertTexCoord\x00")))
-	//gl.EnableVertexAttribArray(texCoordAttrib)
-	//gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(0))
 
 	normal := uint32(gl.GetAttribLocation(program, gl.Str("aNormal\x00")))
 	gl.EnableVertexAttribArray(normal)
-	gl.VertexAttribPointer(normal, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(3*4))
+	gl.VertexAttribPointer(normal, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(3*4))
+
+	texCoordAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aTexCoords\x00")))
+	gl.EnableVertexAttribArray(texCoordAttrib)
+	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
 
 	return vao, vbo
 }
@@ -54,12 +54,12 @@ func MakeLightVao(vertices []float32, program uint32, vbo uint32) uint32 {
 
 	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(0))
 
 	return vao
 }
 
-func MakeTexture(path string) *uint32 {
+func MakeTexture(path string) uint32 {
 
 	rgba := loadTextureImage(path)
 
@@ -87,7 +87,7 @@ func MakeTexture(path string) *uint32 {
 		gl.Ptr(rgba.Pix))
 	gl.GenerateMipmap(gl.TEXTURE_2D)
 
-	return &texture
+	return texture
 }
 
 func loadTextureImage(path string) *image.RGBA {

@@ -7,7 +7,6 @@ import (
 	mgl "github.com/go-gl/mathgl/mgl32"
 	"io/ioutil"
 	"log"
-	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -56,15 +55,23 @@ func main() {
 	window.SetCursorPosCallback(camera.MouseCallback)
 	window.SetScrollCallback(camera.ScrollCallback)
 
+	diffuseMap := graphics.MakeTexture("resources\\textures\\container2.png")
+	objectShader.SetInt("material.diffuse", 0)
+	specularMap := graphics.MakeTexture("resources\\textures\\container2_specular.png")
+	objectShader.SetInt("material.specular", 1)
+
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_2D, 0)
+
 	for !window.ShouldClose() {
-		draw(vao, lightVao, window, &objectShader, &lightShader)
+		draw(vao, lightVao, window, &objectShader, &lightShader, diffuseMap, specularMap)
 	}
 
 	window.Destroy()
 }
 
 // draw function called from application loop
-func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader) {
+func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader, texture uint32, specularMap uint32) {
 	// per-frame time logic
 	// --------------------
 	currentFrame := glfw.GetTime()
@@ -95,22 +102,27 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 
 	// light properties
 	lightColor := mgl.Vec3{
-		float32(math.Sin(glfw.GetTime() * 2.0)),
-		float32(math.Sin(glfw.GetTime() * 0.7)),
-		float32(math.Sin(glfw.GetTime() * 1.3)),
+		1.0,
+		3.0,
+		1.0,
 	}
 
 	diffuseColor := lightColor.Mul(0.5)   // decrease the influence
 	ambientColor := diffuseColor.Mul(0.2) // low influence
 	objectShader.SetVec3("light.ambient", ambientColor)
 	objectShader.SetVec3("light.diffuse", diffuseColor)
-	objectShader.SetVec3("light.specular", mgl.Vec3{1.0, 1.0, 1.0})
+	objectShader.SetVec3("light.specular", mgl.Vec3{0.0, 1.0, 0.0})
 
 	// material properties
 	objectShader.SetVec3("material.ambient", mgl.Vec3{1.0, 0.5, 0.31})
 	objectShader.SetVec3("material.diffuse", mgl.Vec3{1.0, 0.5, 0.31})
 	objectShader.SetVec3("material.specular", mgl.Vec3{0.5, 0.5, 0.5})
 	objectShader.SetFloat("material.shininess", 32.0)
+
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+	gl.ActiveTexture(gl.TEXTURE1)
+	gl.BindTexture(gl.TEXTURE_2D, specularMap)
 
 	gl.BindVertexArray(vao)
 
@@ -124,7 +136,7 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	lightCubeShader.Use()
 	lightCubeShader.SetMat4("projection", projection)
 	lightCubeShader.SetMat4("view", view)
-	lightCubeShader.SetVec3("color", lightColor)
+	lightCubeShader.SetVec3("color", mgl.Vec3{0.0, 1.0, 0.0})
 	model = mgl.Ident4()
 	model = model.Mul4(mgl.Translate3D(lightPosition.X(), lightPosition.Y(), lightPosition.Z()))
 	model = model.Mul4(mgl.Scale3D(0.3, 0.3, 0.3)) // a smaller cube
@@ -151,7 +163,6 @@ func getTextFileContents(filename string) string {
 
 func processInput(window *glfw.Window) {
 	if window.GetKey(glfw.KeyEscape) == glfw.Press {
-		log.Println("Escape key pressed")
 		window.SetShouldClose(true)
 	}
 
@@ -165,25 +176,21 @@ func processInput(window *glfw.Window) {
 	cameraSpeed := float32(2.5 * deltaTime)
 	// Forward
 	if window.GetKey(glfw.KeyW) == glfw.Press {
-		log.Println("W key pressed")
 		camera.CameraPos = camera.CameraPos.Add(camera.CameraFront.Mul(cameraSpeed))
 	}
 
 	// Backward
 	if window.GetKey(glfw.KeyS) == glfw.Press {
-		log.Println("S key pressed")
 		camera.CameraPos = camera.CameraPos.Sub(camera.CameraFront.Mul(cameraSpeed))
 	}
 
 	// Left
 	if window.GetKey(glfw.KeyA) == glfw.Press {
-		log.Println("A key pressed")
 		camera.CameraPos = camera.CameraPos.Sub(camera.CameraFront.Cross(camera.CameraUp).Normalize().Mul(cameraSpeed))
 	}
 
 	// Right
 	if window.GetKey(glfw.KeyD) == glfw.Press {
-		log.Println("D key pressed")
 		camera.CameraPos = camera.CameraPos.Add(camera.CameraFront.Cross(camera.CameraUp).Normalize().Mul(cameraSpeed))
 	}
 }
