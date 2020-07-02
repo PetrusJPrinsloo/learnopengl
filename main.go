@@ -7,6 +7,7 @@ import (
 	mgl "github.com/go-gl/mathgl/mgl32"
 	"io/ioutil"
 	"log"
+	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -16,8 +17,22 @@ import (
 var cnf *config.Config
 
 var lightPosition = mgl.Vec3{1.2, 1.0, 2.0}
+var lightDirection = mgl.Vec3{-0.2, -1.0, -0.3}
 
-var cubePosition = mgl.Vec3{0.0, 0.0, 0.0}
+//var cubePosition = mgl.Vec3{0.0, 0.0, 0.0}
+
+var cubePositions = []mgl.Vec3{
+	//{ 0.0,  0.0,  0.0},
+	{2.0, 5.0, -15.0},
+	{-1.5, -2.2, -2.5},
+	{-3.8, -2.0, -12.3},
+	{2.4, -0.4, -3.5},
+	{-1.7, 3.0, -7.5},
+	{1.3, -2.0, -2.5},
+	{1.5, 2.0, -2.5},
+	{1.5, 0.2, -1.5},
+	{-1.3, 1.0, -1.5},
+}
 
 var camera = graphics.GetCamera()
 
@@ -59,6 +74,9 @@ func main() {
 	objectShader.SetInt("material.diffuse", 0)
 	specularMap := graphics.MakeTexture("resources\\textures\\container2_specular.png")
 	objectShader.SetInt("material.specular", 1)
+	objectShader.SetFloat("light.constant", 1.0)
+	objectShader.SetFloat("light.linear", 0.09)
+	objectShader.SetFloat("light.quadratic", 0.032)
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
@@ -86,8 +104,21 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 
 	objectShader.Use()
 	objectShader.SetVec3("objectColor", mgl.Vec3{1.0, 0.5, 0.31})
-	objectShader.SetVec3("lightColor", mgl.Vec3{1.0, 1.0, 1.0})
-	objectShader.SetVec3("light.position", lightPosition)
+	objectShader.SetVec3("lightColor", mgl.Vec3{3.0, 3.0, 3.0})
+	objectShader.SetVec3("light.direction", lightDirection)
+	objectShader.SetVec3("light.position", camera.CameraPos)
+	objectShader.SetVec3("light.direction", camera.CameraFront)
+	objectShader.SetFloat("light.outerCutOff", float32(math.Cos(float64(mgl.DegToRad(17.5)))))
+	objectShader.SetFloat("light.cutOff", float32(math.Cos(float64(mgl.DegToRad(12.5)))))
+	objectShader.SetVec3("light.ambient", mgl.Vec3{1.0, 1.0, 1.0})
+	objectShader.SetVec3("light.diffuse", mgl.Vec3{0.8, 0.8, 0.8})
+	objectShader.SetVec3("light.specular", mgl.Vec3{1.0, 1.0, 1.0})
+	objectShader.SetFloat("light.constant", 1.0)
+	objectShader.SetFloat("light.linear", 0.09)
+	objectShader.SetFloat("light.quadratic", 0.032)
+
+	// material properties
+	objectShader.SetFloat("material.shininess", 32.0)
 
 	//Transformation Matrices
 	projection := mgl.Perspective(mgl.DegToRad(float32(camera.Fov)), float32(cnf.Width)/float32(cnf.Height), 0.1, 100.0)
@@ -97,27 +128,8 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	view := mgl.Ident4()
 	view = view.Mul4(mgl.LookAtV(camera.CameraPos, camera.CameraPos.Add(camera.CameraFront), camera.CameraUp))
 	objectShader.SetMat4("view", view)
-	objectShader.SetVec3("lightPos", lightPosition)
+	//objectShader.SetVec3("lightPos", lightPosition)
 	objectShader.SetVec3("viewPos", camera.CameraPos)
-
-	// light properties
-	lightColor := mgl.Vec3{
-		1.0,
-		3.0,
-		1.0,
-	}
-
-	diffuseColor := lightColor.Mul(0.5)   // decrease the influence
-	ambientColor := diffuseColor.Mul(0.2) // low influence
-	objectShader.SetVec3("light.ambient", ambientColor)
-	objectShader.SetVec3("light.diffuse", diffuseColor)
-	objectShader.SetVec3("light.specular", mgl.Vec3{0.0, 1.0, 0.0})
-
-	// material properties
-	objectShader.SetVec3("material.ambient", mgl.Vec3{1.0, 0.5, 0.31})
-	objectShader.SetVec3("material.diffuse", mgl.Vec3{1.0, 0.5, 0.31})
-	objectShader.SetVec3("material.specular", mgl.Vec3{0.5, 0.5, 0.5})
-	objectShader.SetFloat("material.shininess", 32.0)
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, texture)
@@ -126,24 +138,26 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 
 	gl.BindVertexArray(vao)
 
-	model := mgl.Ident4()
-	model = model.Mul4(mgl.Translate3D(cubePosition.X(), cubePosition.Y(), cubePosition.Z()))
-	objectShader.SetMat4("model", model)
+	for _, cubePosition := range cubePositions {
+		model := mgl.Ident4()
+		model = model.Mul4(mgl.Translate3D(cubePosition.X(), cubePosition.Y(), cubePosition.Z()))
+		objectShader.SetMat4("model", model)
 
-	gl.DrawArrays(gl.TRIANGLES, 0, 36)
+		gl.DrawArrays(gl.TRIANGLES, 0, 36)
+	}
 
-	// also draw the lamp object
-	lightCubeShader.Use()
-	lightCubeShader.SetMat4("projection", projection)
-	lightCubeShader.SetMat4("view", view)
-	lightCubeShader.SetVec3("color", mgl.Vec3{0.0, 1.0, 0.0})
-	model = mgl.Ident4()
-	model = model.Mul4(mgl.Translate3D(lightPosition.X(), lightPosition.Y(), lightPosition.Z()))
-	model = model.Mul4(mgl.Scale3D(0.3, 0.3, 0.3)) // a smaller cube
-	lightCubeShader.SetMat4("model", model)
-
-	gl.BindVertexArray(lightVao)
-	gl.DrawArrays(gl.TRIANGLES, 0, 36)
+	//also draw the lamp object
+	//lightCubeShader.Use()
+	//lightCubeShader.SetMat4("projection", projection)
+	//lightCubeShader.SetMat4("view", view)
+	//lightCubeShader.SetVec3("color", mgl.Vec3{1.0, 1.0, 1.0})
+	//model := mgl.Ident4()
+	//model = model.Mul4(mgl.Translate3D(lightPosition.X(), lightPosition.Y(), lightPosition.Z()))
+	//model = model.Mul4(mgl.Scale3D(0.3, 0.3, 0.3)) // a smaller cube
+	//lightCubeShader.SetMat4("model", model)
+	//
+	//gl.BindVertexArray(lightVao)
+	//gl.DrawArrays(gl.TRIANGLES, 0, 36)
 
 	// Maintenance
 	window.SwapBuffers()
