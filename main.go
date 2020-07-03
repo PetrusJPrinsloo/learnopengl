@@ -16,7 +16,6 @@ import (
 
 var cnf *config.Config
 
-var lightPosition = mgl.Vec3{1.2, 1.0, 2.0}
 var lightDirection = mgl.Vec3{-0.2, -1.0, -0.3}
 
 //var cubePosition = mgl.Vec3{0.0, 0.0, 0.0}
@@ -32,6 +31,13 @@ var cubePositions = []mgl.Vec3{
 	{1.5, 2.0, -2.5},
 	{1.5, 0.2, -1.5},
 	{-1.3, 1.0, -1.5},
+}
+
+var pointLightPositions = []mgl.Vec3{
+	{0.7, 0.2, 2.0},
+	{2.3, -3.3, -4.0},
+	{-4.0, 2.0, -12.0},
+	{0.0, 0.0, -3.0},
 }
 
 var camera = graphics.GetCamera()
@@ -105,17 +111,60 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	objectShader.Use()
 	objectShader.SetVec3("objectColor", mgl.Vec3{1.0, 0.5, 0.31})
 	objectShader.SetVec3("lightColor", mgl.Vec3{3.0, 3.0, 3.0})
-	objectShader.SetVec3("light.direction", lightDirection)
-	objectShader.SetVec3("light.position", camera.CameraPos)
-	objectShader.SetVec3("light.direction", camera.CameraFront)
-	objectShader.SetFloat("light.outerCutOff", float32(math.Cos(float64(mgl.DegToRad(17.5)))))
-	objectShader.SetFloat("light.cutOff", float32(math.Cos(float64(mgl.DegToRad(12.5)))))
-	objectShader.SetVec3("light.ambient", mgl.Vec3{1.0, 1.0, 1.0})
-	objectShader.SetVec3("light.diffuse", mgl.Vec3{0.8, 0.8, 0.8})
-	objectShader.SetVec3("light.specular", mgl.Vec3{1.0, 1.0, 1.0})
-	objectShader.SetFloat("light.constant", 1.0)
-	objectShader.SetFloat("light.linear", 0.09)
-	objectShader.SetFloat("light.quadratic", 0.032)
+	/*
+	   Here we set all the uniforms for the 5/6 types of lights we have. We have to set them manually and index
+	   the proper PointLight struct in the array to set each uniform variable. This can be done more code-friendly
+	   by defining light types as classes and set their values in there, or by using a more efficient uniform approach
+	   by using 'Uniform buffer objects', but that is something we'll discuss in the 'Advanced GLSL' tutorial.
+	*/
+	// directional light
+	objectShader.SetVec3("dirLight.direction", mgl.Vec3{-0.2, -1.0, -0.3})
+	objectShader.SetVec3("dirLight.ambient", mgl.Vec3{0.05, 0.05, 0.05})
+	objectShader.SetVec3("dirLight.diffuse", mgl.Vec3{0.4, 0.4, 0.4})
+	objectShader.SetVec3("dirLight.specular", mgl.Vec3{0.5, 0.5, 0.5})
+	// point light 1
+	objectShader.SetVec3("pointLights[0].position", pointLightPositions[0])
+	objectShader.SetVec3("pointLights[0].ambient", mgl.Vec3{0.05, 0.05, 0.05})
+	objectShader.SetVec3("pointLights[0].diffuse", mgl.Vec3{0.8, 0.8, 0.8})
+	objectShader.SetVec3("pointLights[0].specular", mgl.Vec3{.0, 1.0, 1.0})
+	objectShader.SetFloat("pointLights[0].constant", 1.0)
+	objectShader.SetFloat("pointLights[0].linear", 0.09)
+	objectShader.SetFloat("pointLights[0].quadratic", 0.032)
+	// point light 2
+	objectShader.SetVec3("pointLights[1].position", pointLightPositions[1])
+	objectShader.SetVec3("pointLights[1].ambient", mgl.Vec3{0.05, 0.05, 0.05})
+	objectShader.SetVec3("pointLights[1].diffuse", mgl.Vec3{0.8, 0.8, 0.8})
+	objectShader.SetVec3("pointLights[1].specular", mgl.Vec3{1.0, 1.0, 1.0})
+	objectShader.SetFloat("pointLights[1].constant", 1.0)
+	objectShader.SetFloat("pointLights[1].linear", 0.09)
+	objectShader.SetFloat("pointLights[1].quadratic", 0.032)
+	// point light 3
+	objectShader.SetVec3("pointLights[2].position", pointLightPositions[2])
+	objectShader.SetVec3("pointLights[2].ambient", mgl.Vec3{0.05, 0.05, 0.05})
+	objectShader.SetVec3("pointLights[2].diffuse", mgl.Vec3{0.8, 0.8, 0.8})
+	objectShader.SetVec3("pointLights[2].specular", mgl.Vec3{1.0, 1.0, 1.0})
+	objectShader.SetFloat("pointLights[2].constant", 1.0)
+	objectShader.SetFloat("pointLights[2].linear", 0.09)
+	objectShader.SetFloat("pointLights[2].quadratic", 0.032)
+	// point light 4
+	objectShader.SetVec3("pointLights[3].position", pointLightPositions[3])
+	objectShader.SetVec3("pointLights[3].ambient", mgl.Vec3{0.05, 0.05, 0.05})
+	objectShader.SetVec3("pointLights[3].diffuse", mgl.Vec3{0.8, 0.8, 0.8})
+	objectShader.SetVec3("pointLights[3].specular", mgl.Vec3{1.0, 1.0, 1.0})
+	objectShader.SetFloat("pointLights[3].constant", 1.0)
+	objectShader.SetFloat("pointLights[3].linear", 0.09)
+	objectShader.SetFloat("pointLights[3].quadratic", 0.032)
+	// spotLight
+	objectShader.SetVec3("spotLight.position", camera.CameraPos)
+	objectShader.SetVec3("spotLight.direction", camera.CameraFront)
+	objectShader.SetVec3("spotLight.ambient", mgl.Vec3{0.0, 0.0, 0.0})
+	objectShader.SetVec3("spotLight.diffuse", mgl.Vec3{1.0, 1.0, 1.0})
+	objectShader.SetVec3("spotLight.specular", mgl.Vec3{1.0, 1.0, 1.0})
+	objectShader.SetFloat("spotLight.constant", 1.0)
+	objectShader.SetFloat("spotLight.linear", 0.09)
+	objectShader.SetFloat("spotLight.quadratic", 0.032)
+	objectShader.SetFloat("spotLight.outerCutOff", float32(math.Cos(float64(mgl.DegToRad(15.0)))))
+	objectShader.SetFloat("spotLight.cutOff", float32(math.Cos(float64(mgl.DegToRad(12.5)))))
 
 	// material properties
 	objectShader.SetFloat("material.shininess", 32.0)
@@ -147,17 +196,20 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	}
 
 	//also draw the lamp object
-	//lightCubeShader.Use()
-	//lightCubeShader.SetMat4("projection", projection)
-	//lightCubeShader.SetMat4("view", view)
-	//lightCubeShader.SetVec3("color", mgl.Vec3{1.0, 1.0, 1.0})
-	//model := mgl.Ident4()
-	//model = model.Mul4(mgl.Translate3D(lightPosition.X(), lightPosition.Y(), lightPosition.Z()))
-	//model = model.Mul4(mgl.Scale3D(0.3, 0.3, 0.3)) // a smaller cube
-	//lightCubeShader.SetMat4("model", model)
-	//
-	//gl.BindVertexArray(lightVao)
-	//gl.DrawArrays(gl.TRIANGLES, 0, 36)
+	lightCubeShader.Use()
+	lightCubeShader.SetMat4("projection", projection)
+	lightCubeShader.SetMat4("view", view)
+	lightCubeShader.SetVec3("color", mgl.Vec3{1.0, 1.0, 1.0})
+
+	for _, pointLight := range pointLightPositions {
+		model := mgl.Ident4()
+		model = model.Mul4(mgl.Translate3D(pointLight.X(), pointLight.Y(), pointLight.Z()))
+		model = model.Mul4(mgl.Scale3D(0.3, 0.3, 0.3)) // a smaller cube
+		lightCubeShader.SetMat4("model", model)
+
+		gl.BindVertexArray(lightVao)
+		gl.DrawArrays(gl.TRIANGLES, 0, 36)
+	}
 
 	// Maintenance
 	window.SwapBuffers()
