@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/PetrusJPrinsloo/learnopengl/config"
 	"github.com/PetrusJPrinsloo/learnopengl/graphics"
+	"github.com/PetrusJPrinsloo/learnopengl/scripting"
 	"github.com/PetrusJPrinsloo/learnopengl/shape"
 	mgl "github.com/go-gl/mathgl/mgl32"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"math"
 	"runtime"
 
+	"github.com/PetrusJPrinsloo/assimp-go"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -46,6 +48,8 @@ var deltaTime = 0.0
 var lastFrame = 0.0
 
 func main() {
+	scripting.HelloWorld()
+
 	cnf = config.ReadFile("default.json")
 	vertexShaderSource := getTextFileContents("resources\\shaders\\vertex\\colors.glsl")
 	fragmentShaderSource := getTextFileContents("resources\\shaders\\fragment\\colors.glsl")
@@ -56,6 +60,8 @@ func main() {
 	camera.LastY = float64(cnf.Height) / 2.0
 
 	runtime.LockOSThread()
+
+	srcMeshes, err := assimp.ParseFile()
 
 	window := graphics.InitGlfw(cnf)
 	graphics.InitOpenGL()
