@@ -11,7 +11,6 @@ import (
 	"math"
 	"runtime"
 
-	"github.com/PetrusJPrinsloo/assimp-go"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -23,16 +22,16 @@ var lightDirection = mgl.Vec3{-0.2, -1.0, -0.3}
 //var cubePosition = mgl.Vec3{0.0, 0.0, 0.0}
 
 var cubePositions = []mgl.Vec3{
-	//{ 0.0,  0.0,  0.0},
-	{2.0, 5.0, -15.0},
-	{-1.5, -2.2, -2.5},
-	{-3.8, -2.0, -12.3},
-	{2.4, -0.4, -3.5},
-	{-1.7, 3.0, -7.5},
-	{1.3, -2.0, -2.5},
-	{1.5, 2.0, -2.5},
-	{1.5, 0.2, -1.5},
-	{-1.3, 1.0, -1.5},
+	{0.0, 0.0, 0.0},
+	//{2.0, 5.0, -15.0},
+	//{-1.5, -2.2, -2.5},
+	//{-3.8, -2.0, -12.3},
+	//{2.4, -0.4, -3.5},
+	//{-1.7, 3.0, -7.5},
+	//{1.3, -2.0, -2.5},
+	//{1.5, 2.0, -2.5},
+	//{1.5, 0.2, -1.5},
+	//{-1.3, 1.0, -1.5},
 }
 
 var pointLightPositions = []mgl.Vec3{
@@ -61,7 +60,9 @@ func main() {
 
 	runtime.LockOSThread()
 
-	srcMeshes, err := assimp.ParseFile()
+	srcMeshes := graphics.NewModel("resources\\models\\cube\\cube.obj")
+
+	//fmt.Printf("%#v\\n", srcMeshes.GetRenderableVertices())
 
 	window := graphics.InitGlfw(cnf)
 	graphics.InitOpenGL()
@@ -70,8 +71,8 @@ func main() {
 	lightShader := graphics.ShaderFactory(vertexShaderSourceLight, fragmentShaderSourceLight)
 	objectShader.Use()
 
-	vao, vbo := graphics.MakeObjectVao(shape.Cube, objectShader.Id)
-	lightVao := graphics.MakeLightVao(shape.Cube, lightShader.Id, vbo)
+	vao := graphics.MakeObjectVao(srcMeshes.GetRenderableVertices(), objectShader.Id)
+	lightVao := graphics.MakeLightVao(shape.Cube, lightShader.Id)
 
 	// Configure global settings
 	gl.Enable(gl.DEPTH_TEST)

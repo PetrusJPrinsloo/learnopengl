@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-func MakeObjectVao(vertices []float32, program uint32) (uint32, uint32) {
+func MakeObjectVao(vertices []float32, program uint32) uint32 {
 	var (
 		vbo uint32
 		vao uint32
@@ -40,13 +40,19 @@ func MakeObjectVao(vertices []float32, program uint32) (uint32, uint32) {
 	gl.EnableVertexAttribArray(texCoordAttrib)
 	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
 
-	return vao, vbo
+	return vao
 }
 
-func MakeLightVao(vertices []float32, program uint32, vbo uint32) uint32 {
-	var vao uint32
+func MakeLightVao(vertices []float32, program uint32) uint32 {
+	var (
+		vbo uint32
+		vao uint32
+	)
 
 	gl.GenVertexArrays(1, &vao)
+	gl.GenBuffers(1, &vbo)
+
+	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
 	gl.BindVertexArray(vao)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
