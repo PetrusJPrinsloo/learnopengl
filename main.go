@@ -83,10 +83,10 @@ func main() {
 	window.SetCursorPosCallback(camera.MouseCallback)
 	window.SetScrollCallback(camera.ScrollCallback)
 
-	diffuseMap := graphics.MakeTexture("resources\\textures\\container2.png")
+	diffuseMap := graphics.MakeTexture("resources\\textures\\cube_tm.png")
 	objectShader.SetInt("material.diffuse", 0)
-	specularMap := graphics.MakeTexture("resources\\textures\\container2_specular.png")
-	objectShader.SetInt("material.specular", 1)
+	//specularMap := graphics.MakeTexture("resources\\textures\\container2_specular.png")
+	//objectShader.SetInt("material.specular", 1)
 	objectShader.SetFloat("light.constant", 1.0)
 	objectShader.SetFloat("light.linear", 0.09)
 	objectShader.SetFloat("light.quadratic", 0.032)
@@ -95,14 +95,14 @@ func main() {
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 
 	for !window.ShouldClose() {
-		draw(vao, lightVao, window, &objectShader, &lightShader, diffuseMap, specularMap)
+		draw(vao, lightVao, window, &objectShader, &lightShader, diffuseMap)
 	}
 
 	window.Destroy()
 }
 
 // draw function called from application loop
-func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader, texture uint32, specularMap uint32) {
+func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader, texture uint32) {
 	// per-frame time logic
 	// --------------------
 	currentFrame := glfw.GetTime()
@@ -189,8 +189,8 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, texture)
-	gl.ActiveTexture(gl.TEXTURE1)
-	gl.BindTexture(gl.TEXTURE_2D, specularMap)
+	//gl.ActiveTexture(gl.TEXTURE1)
+	//gl.BindTexture(gl.TEXTURE_2D, specularMap)
 
 	gl.BindVertexArray(vao)
 
