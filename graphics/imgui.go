@@ -81,7 +81,7 @@ type Renderer interface {
 
 const (
 	MillisPerSecond = 1000
-	SleepDuration   = time.Millisecond * 25
+	SleepDuration   = time.Millisecond * 5
 )
 
 // Dispose cleans up the resources.

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/PetrusJPrinsloo/learnopengl/config"
 	"github.com/PetrusJPrinsloo/learnopengl/graphics"
+	"github.com/PetrusJPrinsloo/learnopengl/shape"
+
 	//"github.com/PetrusJPrinsloo/learnopengl/shape"
 	mgl "github.com/go-gl/mathgl/mgl32"
 	"github.com/inkyblackness/imgui-go/v2"
@@ -53,8 +55,8 @@ func main() {
 	cnf = config.ReadFile("default.json")
 	vertexShaderSource := getTextFileContents("resources\\shaders\\vertex\\colors.glsl")
 	fragmentShaderSource := getTextFileContents("resources\\shaders\\fragment\\colors.glsl")
-	//vertexShaderSourceLight := getTextFileContents("resources\\shaders\\vertex\\light_cube.glsl")
-	//fragmentShaderSourceLight := getTextFileContents("resources\\shaders\\fragment\\light_cube.glsl")
+	vertexShaderSourceLight := getTextFileContents("resources\\shaders\\vertex\\light_cube.glsl")
+	fragmentShaderSourceLight := getTextFileContents("resources\\shaders\\fragment\\light_cube.glsl")
 
 	camera.LastX = float64(cnf.Width) / 2.0
 	camera.LastY = float64(cnf.Height) / 2.0
@@ -73,24 +75,24 @@ func main() {
 	graphics.InitOpenGL()
 	defer glfw.Terminate()
 	objectShader := graphics.ShaderFactory(vertexShaderSource, fragmentShaderSource)
-	//lightShader := graphics.ShaderFactory(vertexShaderSourceLight, fragmentShaderSourceLight)
+	lightShader := graphics.ShaderFactory(vertexShaderSourceLight, fragmentShaderSourceLight)
 	objectShader.Use()
 
-	//vao, vbo := graphics.MakeObjectVao(shape.Cube, objectShader.Id)
-	//lightVao := graphics.MakeLightVao(shape.Cube, lightShader.Id, vbo)
+	vao, vbo := graphics.MakeObjectVao(shape.Cube, objectShader.Id)
+	lightVao := graphics.MakeLightVao(shape.Cube, lightShader.Id, vbo)
 
 	// Configure global settings
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
 	gl.ClearColor(0.126, 0.145, 0.2, 1.0)
 
-	//GLFW.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
-	//GLFW.Window.SetCursorPosCallback(camera.MouseCallback)
-	//GLFW.Window.SetScrollCallback(camera.ScrollCallback)
+	GLFW.Window.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+	GLFW.Window.SetCursorPosCallback(camera.MouseCallback)
+	GLFW.Window.SetScrollCallback(camera.ScrollCallback)
 
-	//diffuseMap := graphics.MakeTexture("resources\\textures\\container2.png")
+	diffuseMap := graphics.MakeTexture("resources\\textures\\container2.png")
 	objectShader.SetInt("material.diffuse", 0)
-	//specularMap := graphics.MakeTexture("resources\\textures\\container2_specular.png")
+	specularMap := graphics.MakeTexture("resources\\textures\\container2_specular.png")
 	objectShader.SetInt("material.specular", 1)
 	objectShader.SetFloat("light.constant", 1.0)
 	objectShader.SetFloat("light.linear", 0.09)
@@ -106,14 +108,9 @@ func main() {
 	}
 	defer renderer.Dispose()
 
-	//for !GLFW.Window.ShouldClose() {
-	//	//draw(vao, lightVao, GLFW.Window, &objectShader, &lightShader, diffuseMap, specularMap)
-	//	Run()
-	//}
-
 	defer GLFW.Dispose()
 
-	Run(GLFW, renderer)
+	Run(GLFW, renderer, vao, lightVao, GLFW.Window, &objectShader, &lightShader, diffuseMap, specularMap)
 }
 
 // draw function called from application loop
@@ -234,7 +231,7 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	}
 
 	// Maintenance
-	window.SwapBuffers()
+	//window.SwapBuffers()
 	glfw.PollEvents()
 }
 
@@ -285,7 +282,7 @@ func processInput(window *glfw.Window) {
 
 // Run implements the main program loop of the demo. It returns when the platform signals to stop.
 // This demo application shows some basic features of ImGui, as well as exposing the standard demo window.
-func Run(p graphics.Platform, r graphics.Renderer) {
+func Run(p graphics.Platform, r graphics.Renderer, vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader, texture uint32, specularMap uint32) {
 	imgui.CurrentIO().SetClipboard(graphics.Clipboard{Platform: p})
 
 	showDemoWindow := false
@@ -346,16 +343,16 @@ func Run(p graphics.Platform, r graphics.Renderer) {
 
 			imgui.ShowDemoWindow(&showDemoWindow)
 		}
-		//if showGoDemoWindow {
-		//	demo.Show(&showGoDemoWindow)
-		//}
+		if showGoDemoWindow {
+			graphics.Show(&showGoDemoWindow)
+		}
 
 		// Rendering
 		imgui.Render() // This call only creates the draw data list. Actual rendering to framebuffer is done below.
 
 		r.PreRender(clearColor)
 		// A this point, the application could perform its own rendering...
-		// app.RenderScene()
+		draw(vao, lightVao, window, objectShader, lightCubeShader, texture, specularMap)
 
 		r.Render(p.DisplaySize(), p.FramebufferSize(), imgui.RenderedDrawData())
 		p.PostRender()
