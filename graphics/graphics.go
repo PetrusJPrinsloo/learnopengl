@@ -5,6 +5,7 @@ import (
 	"github.com/PetrusJPrinsloo/learnopengl/config"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/inkyblackness/imgui-go/v2"
 	"image"
 	"image/draw"
 	_ "image/jpeg"
@@ -115,7 +116,7 @@ func loadTextureImage(path string) *image.RGBA {
 }
 
 // initGlfw initializes glfw and returns a Window to use.
-func InitGlfw(cnf *config.Config) *glfw.Window {
+func InitGlfw(io imgui.IO, cnf *config.Config) (*GLFW, error) {
 	if err := glfw.Init(); err != nil {
 		panic(err)
 	}
@@ -130,8 +131,19 @@ func InitGlfw(cnf *config.Config) *glfw.Window {
 		panic(err)
 	}
 	window.MakeContextCurrent()
+	glfw.SwapInterval(1)
 
-	return window
+	window.MakeContextCurrent()
+	glfw.SwapInterval(1)
+
+	platform := &GLFW{
+		ImguiIO: io,
+		Window:  window,
+	}
+	platform.setKeyMapping()
+	platform.installCallbacks()
+
+	return platform, nil
 }
 
 // InitOpenGL initializes OpenGL and returns an initialized program.
