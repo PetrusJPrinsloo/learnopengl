@@ -117,7 +117,7 @@ func main() {
 
 	defer GLFW.Dispose()
 
-	Run(GLFW, renderer, vao, lightVao, GLFW.Window, &objectShader, &lightShader, diffuseMap, specularMap)
+	Run(GLFW, renderer, vao, lightVao, GLFW.Window, &objectShader, &lightShader, diffuseMap)
 }
 
 // draw function called from application loop
@@ -289,7 +289,7 @@ func processInput(window *glfw.Window) {
 
 // Run implements the main program loop of the demo. It returns when the platform signals to stop.
 // This demo application shows some basic features of ImGui, as well as exposing the standard demo window.
-func Run(p graphics.Platform, r graphics.Renderer, vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader, texture uint32, specularMap uint32) {
+func Run(p graphics.Platform, r graphics.Renderer, vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphics.Shader, lightCubeShader *graphics.Shader, texture uint32) {
 	imgui.CurrentIO().SetClipboard(graphics.Clipboard{Platform: p})
 
 	showDemoWindow := false
@@ -359,7 +359,7 @@ func Run(p graphics.Platform, r graphics.Renderer, vao uint32, lightVao uint32, 
 
 		r.PreRender(clearColor)
 		// A this point, the application could perform its own rendering...
-		draw(vao, lightVao, window, objectShader, lightCubeShader, texture, specularMap)
+		draw(vao, lightVao, window, objectShader, lightCubeShader, texture)
 
 		r.Render(p.DisplaySize(), p.FramebufferSize(), imgui.RenderedDrawData())
 		p.PostRender()
