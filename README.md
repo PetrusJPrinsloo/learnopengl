@@ -1,3 +1,4 @@
+![GitHub Logo](gopher.png)
 # Learn OpenGL
 
 ![Build](https://github.com/PetrusJPrinsloo/learnopengl/workflows/Build/badge.svg)
