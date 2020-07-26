@@ -1,4 +1,5 @@
 ![GitHub Logo](gopher.png)
+*Gopher image by [Renee French][rf], licensed under [Creative Commons 3.0 Attributions license][cc3-by].*
 # Learn OpenGL
 
 ![Build](https://github.com/PetrusJPrinsloo/learnopengl/workflows/Build/badge.svg)
