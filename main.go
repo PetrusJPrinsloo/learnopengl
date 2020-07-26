@@ -42,9 +42,9 @@ var cubePositions = []mgl.Vec3{
 
 var pointLightPositions = []mgl.Vec3{
 	{0.7, 0.2, 2.0},
-	{2.3, -3.3, -4.0},
-	{-4.0, 2.0, -12.0},
-	{0.0, 0.0, -3.0},
+	//{2.3, -3.3, -4.0},
+	//{-4.0, 2.0, -12.0},
+	//{0.0, 0.0, -3.0},
 }
 
 var camera = graphics.GetCamera()
@@ -156,30 +156,6 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 	objectShader.SetFloat("pointLights[0].constant", 1.0)
 	objectShader.SetFloat("pointLights[0].linear", 0.09)
 	objectShader.SetFloat("pointLights[0].quadratic", 0.032)
-	// point light 2
-	objectShader.SetVec3("pointLights[1].position", pointLightPositions[1])
-	objectShader.SetVec3("pointLights[1].ambient", mgl.Vec3{0.05, 0.05, 0.05})
-	objectShader.SetVec3("pointLights[1].diffuse", mgl.Vec3{0.8, 0.8, 0.8})
-	objectShader.SetVec3("pointLights[1].specular", mgl.Vec3{1.0, 1.0, 1.0})
-	objectShader.SetFloat("pointLights[1].constant", 1.0)
-	objectShader.SetFloat("pointLights[1].linear", 0.09)
-	objectShader.SetFloat("pointLights[1].quadratic", 0.032)
-	// point light 3
-	objectShader.SetVec3("pointLights[2].position", pointLightPositions[2])
-	objectShader.SetVec3("pointLights[2].ambient", mgl.Vec3{0.05, 0.05, 0.05})
-	objectShader.SetVec3("pointLights[2].diffuse", mgl.Vec3{0.8, 0.8, 0.8})
-	objectShader.SetVec3("pointLights[2].specular", mgl.Vec3{1.0, 1.0, 1.0})
-	objectShader.SetFloat("pointLights[2].constant", 1.0)
-	objectShader.SetFloat("pointLights[2].linear", 0.09)
-	objectShader.SetFloat("pointLights[2].quadratic", 0.032)
-	// point light 4
-	objectShader.SetVec3("pointLights[3].position", pointLightPositions[3])
-	objectShader.SetVec3("pointLights[3].ambient", mgl.Vec3{0.05, 0.05, 0.05})
-	objectShader.SetVec3("pointLights[3].diffuse", mgl.Vec3{0.8, 0.8, 0.8})
-	objectShader.SetVec3("pointLights[3].specular", mgl.Vec3{1.0, 1.0, 1.0})
-	objectShader.SetFloat("pointLights[3].constant", 1.0)
-	objectShader.SetFloat("pointLights[3].linear", 0.09)
-	objectShader.SetFloat("pointLights[3].quadratic", 0.032)
 	// spotLight
 	objectShader.SetVec3("spotLight.position", camera.CameraPos)
 	objectShader.SetVec3("spotLight.direction", camera.CameraFront)

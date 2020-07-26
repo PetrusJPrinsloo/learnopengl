@@ -18,16 +18,21 @@ func MakeObjectVao(vertices []float32, program uint32) uint32 {
 	var (
 		vbo uint32
 		vao uint32
+		ebo uint32
 	)
 
 	gl.GenVertexArrays(1, &vao)
 	gl.GenBuffers(1, &vbo)
+	gl.GenBuffers(1, &ebo)
 
 	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
 	gl.BindVertexArray(vao)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, ebo)
+	gl.BufferData(gl.ARRAY_BUFFER, len(indices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
 	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
