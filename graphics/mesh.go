@@ -7,16 +7,13 @@ import (
 )
 
 type Mesh struct {
-	// public
 	Vertices []Vertex
 	Indices  []int32
 	Textures []Texture
 
-	// private
-	Vao, Vbo, Ebo uint32
+	vao, vbo, ebo uint32
 }
 
-// public
 func NewMesh(vertices []Vertex, indices []int32, textures []Texture) *Mesh {
 	mesh := Mesh{
 		Vertices: vertices,
@@ -50,7 +47,7 @@ func (m *Mesh) Draw(shader *Shader) {
 
 	gl.ActiveTexture(gl.TEXTURE0)
 
-	gl.BindVertexArray(m.Vao)
+	gl.BindVertexArray(m.vao)
 	gl.DrawElements(gl.TRIANGLES, int32(len(m.Indices)), gl.UNSIGNED_INT, gl.Ptr(0))
 	gl.BindVertexArray(0)
 }
@@ -58,14 +55,14 @@ func (m *Mesh) Draw(shader *Shader) {
 // Sets up the mesh for opengl from the data
 func (m *Mesh) setupMesh() {
 
-	gl.GenVertexArrays(1, &m.Vao)
-	gl.GenBuffers(1, &m.Vbo)
-	gl.GenBuffers(1, &m.Ebo)
+	gl.GenVertexArrays(1, &m.vao)
+	gl.GenBuffers(1, &m.vbo)
+	gl.GenBuffers(1, &m.ebo)
 
 	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-	gl.BindVertexArray(m.Vao)
+	gl.BindVertexArray(m.vao)
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, m.Vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, m.vbo)
 	gl.BufferData(
 		gl.ARRAY_BUFFER,
 		len(m.Vertices)*int(unsafe.Sizeof(Vertex{})),
@@ -73,7 +70,7 @@ func (m *Mesh) setupMesh() {
 		gl.STATIC_DRAW,
 	)
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, m.Ebo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, m.ebo)
 	gl.BufferData(gl.ARRAY_BUFFER,
 		len(m.Indices)*int(unsafe.Sizeof(int32(1))),
 		gl.Ptr(m.Indices),

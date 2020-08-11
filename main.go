@@ -75,7 +75,7 @@ func main() {
 		os.Exit(-1)
 	}
 
-	srcMeshes := graphics.NewModel("resources\\models\\cube\\cube.obj")
+	srcMeshes := graphics.NewModel_old("resources\\models\\cube\\cube.obj")
 
 	//fmt.Printf("%#v\\n", srcMeshes.GetRenderableVertices())
 

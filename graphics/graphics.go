@@ -32,7 +32,7 @@ func MakeObjectVao(vertices []float32, program uint32) uint32 {
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, ebo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(indices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
 	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
