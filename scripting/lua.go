@@ -5,6 +5,7 @@ import (
 	"log"
 )
 
+// scripting.HelloWorld()
 func HelloWorld() {
 	l := lua.NewState()
 	lua.OpenLibraries(l)

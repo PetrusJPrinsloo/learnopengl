@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/PetrusJPrinsloo/learnopengl/config"
 	"github.com/PetrusJPrinsloo/learnopengl/graphics"
-	"github.com/PetrusJPrinsloo/learnopengl/scripting"
+	"github.com/PetrusJPrinsloo/learnopengl/input"
 	"github.com/PetrusJPrinsloo/learnopengl/shape"
 
 	//"github.com/PetrusJPrinsloo/learnopengl/shape"
@@ -53,7 +53,6 @@ var deltaTime = 0.0
 var lastFrame = 0.0
 
 func main() {
-	scripting.HelloWorld()
 
 	cnf = config.ReadFile("default.json")
 	vertexShaderSource := getTextFileContents("resources\\shaders\\vertex\\colors.glsl")
@@ -130,7 +129,7 @@ func draw(vao uint32, lightVao uint32, window *glfw.Window, objectShader *graphi
 
 	// input
 	// -----
-	processInput(window)
+	input.ProcessInput(window, &camera, deltaTime)
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -227,40 +226,6 @@ func getTextFileContents(filename string) string {
 	// Convert []byte to string
 	text := string(content)
 	return text
-}
-
-func processInput(window *glfw.Window) {
-	if window.GetKey(glfw.KeyEscape) == glfw.Press {
-		window.SetShouldClose(true)
-	}
-
-	if window.GetKey(glfw.KeyI) == glfw.Press {
-		log.Println("Information dump")
-		log.Println("Camera Position: ", camera.CameraPos)
-		log.Println("Camera Front: ", camera.CameraFront)
-		log.Println("Camera Up: ", camera.CameraUp)
-	}
-
-	cameraSpeed := float32(2.5 * deltaTime)
-	// Forward
-	if window.GetKey(glfw.KeyW) == glfw.Press {
-		camera.CameraPos = camera.CameraPos.Add(camera.CameraFront.Mul(cameraSpeed))
-	}
-
-	// Backward
-	if window.GetKey(glfw.KeyS) == glfw.Press {
-		camera.CameraPos = camera.CameraPos.Sub(camera.CameraFront.Mul(cameraSpeed))
-	}
-
-	// Left
-	if window.GetKey(glfw.KeyA) == glfw.Press {
-		camera.CameraPos = camera.CameraPos.Sub(camera.CameraFront.Cross(camera.CameraUp).Normalize().Mul(cameraSpeed))
-	}
-
-	// Right
-	if window.GetKey(glfw.KeyD) == glfw.Press {
-		camera.CameraPos = camera.CameraPos.Add(camera.CameraFront.Cross(camera.CameraUp).Normalize().Mul(cameraSpeed))
-	}
 }
 
 // Run implements the main program loop of the demo. It returns when the platform signals to stop.
